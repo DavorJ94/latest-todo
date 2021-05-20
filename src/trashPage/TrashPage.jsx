@@ -1,7 +1,7 @@
 import { h } from "preact";
 import { useState, useEffect } from "preact/hooks";
 import { html } from "htm/preact";
-import storeDeletedItems from "../store"
+import storeDeletedItems, {getData} from "../store"
 import styles from "./trashpage.module.css";
 import emitter from "../eventEmitter";
 import Column from "./components/Column";
@@ -15,6 +15,8 @@ function TrashPage() {
     emitter.addListener("itemDeleted", function (x) {
       setDeletedItems((prevItems) => [...prevItems, x]);
     });
+
+  getData()
   }, []);
 
   useEffect(() => {
