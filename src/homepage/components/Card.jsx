@@ -1,14 +1,17 @@
 import { h } from "preact";
 import { html } from "htm/preact";
 import styles from "./Card.module.css";
+import emitter from "../../eventEmitter";
 
-export default function Card({
-  text,
-  status,
-  deleteItem,
-  id,
-  handleArrowClick,
-}) {
+export default function Card({ text, status, id }) {
+  function deleteItem(input) {
+    emitter.emit("Deleted item", input);
+  }
+
+  function handleArrowClick(id, arrowType) {
+    emitter.emit("Change task status", id, arrowType);
+  }
+
   return html`<div className=${styles.cardComponent}>
     ${status === "todo" &&
     html`<div

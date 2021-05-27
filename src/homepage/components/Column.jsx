@@ -3,13 +3,7 @@ import { html } from "htm/preact";
 import styles from "./Column.module.css";
 import Card from "./Card";
 
-export default function Column({
-  title,
-  items,
-  type,
-  deleteItem,
-  handleArrowClick,
-}) {
+export default function Column({ title, items, type }) {
   const backgroundStyle =
     title === "To do" ? "brown" : title === "In progress" ? "orange" : "green";
 
@@ -27,8 +21,6 @@ export default function Column({
             id=${card.id}
             status=${card.status}
             key=${card.id}
-            deleteItem=${deleteItem}
-            handleArrowClick=${handleArrowClick}
           />`;
         } else return;
       })}

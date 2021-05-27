@@ -3,7 +3,7 @@ import { html } from "htm/preact";
 import styles from "./Column.module.css";
 import Card from "./Card";
 
-export default function Column({ title, items, type, deleteItem }) {
+export default function Column({ title, items }) {
   return html`<div
     className=${styles.column}
     style=${{ backgroundColor: "red" }}
@@ -12,12 +12,7 @@ export default function Column({ title, items, type, deleteItem }) {
     <hr />
     <div className=${styles.cardsContainer}>
       ${items?.map((card, index) => {
-        return html`<${Card}
-          text=${card.text}
-          id=${card.id}
-          key=${index}
-          deleteItem=${deleteItem}
-        />`;
+        return html`<${Card} text=${card.text} id=${card.id} key=${index} />`;
       })}
     </div>
   </div>`;

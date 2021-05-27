@@ -1,16 +1,19 @@
 import { h } from "preact";
-import { useState, useEffect } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import { html } from "htm/preact";
-import "../store"
+import freezer from "../store";
 import styles from "./homepage.module.css";
 import Column from "./components/Column";
 import emitter from "../eventEmitter";
-import idGenerator from "./utils/idGenerator";
+import { idGenerator } from "../utils/utilFunctions";
 
 function Homepage() {
-  const [toDoText, setToDoText] = useState("");
-  const [toDoItems, setToDoItems] = useState([]);
-  const [warningMessage, setWarningMessage] = useState("");
+  useEffect(() => {
+    const lexicalThis = this;
+    freezer.on("update", function () {
+      lexicalThis.forceUpdate();
+    });
+  }, []);
 
   useEffect(() => {
     document.addEventListener("keydown", handleSubmit);
@@ -19,114 +22,68 @@ function Homepage() {
     };
   }, [handleSubmit]);
 
-  useEffect(() => {
-    !localStorage.getItem("deletedItems") && localStorage.setItem("deletedItems", "[]")
-    let items = JSON.parse(localStorage.getItem("toDoItems"));
-    setToDoItems(() => items);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("toDoItems", JSON.stringify(toDoItems));
-  }, [toDoItems]);
-
   function handleChange(e) {
-    setWarningMessage("");
-    setToDoText(() => e.target.value);
+    freezer.get().set("warningMessage", "").now();
+    freezer.get().set("toDoText", e.target.value).now();
   }
 
   function handleSubmit(e) {
-    if (toDoText === "") {
+    if (freezer.get().toDoText === "") {
       if (e.keyCode === 13 || e.target.getAttribute("data-clicked")) {
-        setWarningMessage("You cannot add an empty to do item.");
+        freezer
+          .get()
+          .set("warningMessage", "You cannot add an empty to do item.")
+          .now();
       }
       return;
     }
     if (e.keyCode === 13 || e.target.getAttribute("data-clicked")) {
       const id = idGenerator();
-      setToDoItems((prevItems) => [
-        ...prevItems,
-        { text: toDoText, status: "todo", id: id },
-      ]);
-      setToDoText(() => "");
+      emitter.emit("Added to do item", {
+        text: freezer.get().toDoText,
+        status: "todo",
+        id: id,
+      });
+      freezer.get().set("toDoText", "").now();
     }
-  }
-
-  function deleteItem(input) {
-    const itemsWithoutDeleted = toDoItems.filter((item) => {
-      return item.id !== input;
-    });
-    const deletedItem = toDoItems.find((item) => {
-      return item.id === input;
-    });
-    setToDoItems(() => itemsWithoutDeleted);
-
-    emitter.emit("itemDeleted", deletedItem);
-  }
-
-  function handleArrowClick(id, arrowType) {
-    let currentIndex;
-    const newItemsState = toDoItems.map((item, index) => {
-      if (item.id === id) {
-        currentIndex = index;
-        if (arrowType === "left") {
-          const newStatus =
-            item.status === "completed"
-              ? (item.status = "in-progress")
-              : (item.status = "todo");
-          return { ...item, status: newStatus };
-        } else {
-          const newStatus =
-            item.status === "todo"
-              ? (item.status = "in-progress")
-              : (item.status = "completed");
-          return { ...item, status: newStatus };
-        }
-      } else return item;
-    });
-    newItemsState.push(newItemsState.splice(currentIndex, 1)[0]);
-    setToDoItems(() => newItemsState);
   }
 
   return html`<div>
       <div className=${styles.addTodo}>
         <input
-          value=${toDoText}
+          value=${freezer.get().toDoText}
           onInput=${handleChange}
           className=${styles.inputTodo}
         ></input>
         <button
           className=${styles.btnAddTodo}
-          data-clicked=${true}
+          data-clicked=true
           onClick=${handleSubmit}
         >
           Add to do item
         </button>
       </div>
       ${
-        warningMessage &&
-        html`<div className=${styles.warningMessage}>${warningMessage}</div>`
+        freezer.get().warningMessage &&
+        html`<div className=${styles.warningMessage}>
+          ${freezer.get().warningMessage}
+        </div>`
       }
       <div className=${styles.columnContainer}>
         <${Column}
           title="To do"
           type="todo"
-          items=${toDoItems}
-          deleteItem=${deleteItem}
-          handleArrowClick=${handleArrowClick}
+          items=${freezer.get().toDoItems}
         />
         <${Column}
           title="In progress"
           type="in-progress"
-          items=${toDoItems}
-          deleteItem=${deleteItem}
-          handleArrowClick=${handleArrowClick}
+          items=${freezer.get().toDoItems}
         />
         <${Column}
           title="Completed"
           type="completed"
-          items=${toDoItems}
-          deleteItem=${deleteItem}
-          handleArrowClick=${handleArrowClick}
+          items=${freezer.get().toDoItems}
         />
       </div>
     </div>`;

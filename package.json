@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "fbemitter": "^3.0.0",
+    "freezer-js": "^0.14.1",
     "htm": "^3.0.4",
     "navigo": "^8.11.1",
     "preact": "^10.5.13",
